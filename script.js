@@ -1,32 +1,51 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const envelopes = Array.from({ length: 100 }, (_, i) => i + 1);
-    const selectedEnvelopes = new Set();
+    const totalEnvelopes = 100;
+    let envelopes = initializeEnvelopes();
 
     const drawButton = document.getElementById('drawButton');
     const envelopeDisplay = document.getElementById('envelopeDisplay');
     const selectedEnvelopesList = document.getElementById('selectedEnvelopes');
 
     drawButton.addEventListener('click', () => {
-        if (envelopes.length === 0) {
+        const remainingEnvelopes = envelopes.filter(env => !env.isSelected);
+        if (remainingEnvelopes.length === 0) {
             envelopeDisplay.textContent = 'Challenge Completed!';
             drawButton.disabled = true;
             return;
         }
 
-        const randomIndex = Math.floor(Math.random() * envelopes.length);
-        const selectedEnvelope = envelopes.splice(randomIndex, 1)[0];
-        selectedEnvelopes.add(selectedEnvelope);
-        envelopeDisplay.textContent = `You drew envelope number: ${selectedEnvelope}`;
+        const randomIndex = Math.floor(Math.random() * remainingEnvelopes.length);
+        const selectedEnvelope = remainingEnvelopes[randomIndex];
+        selectedEnvelope.isSelected = true;
+        saveEnvelopes();
 
+        envelopeDisplay.textContent = `You drew envelope number: ${selectedEnvelope.id}`;
         renderSelectedEnvelopes();
     });
 
+    function initializeEnvelopes() {
+        const storedEnvelopes = localStorage.getItem('envelopes');
+        if (storedEnvelopes) {
+            return JSON.parse(storedEnvelopes);
+        }
+
+        const newEnvelopes = Array.from({ length: totalEnvelopes }, (_, i) => ({ id: i + 1, isSelected: false }));
+        localStorage.setItem('envelopes', JSON.stringify(newEnvelopes));
+        return newEnvelopes;
+    }
+
+    function saveEnvelopes() {
+        localStorage.setItem('envelopes', JSON.stringify(envelopes));
+    }
+
     function renderSelectedEnvelopes() {
         selectedEnvelopesList.innerHTML = '';
-        Array.from(selectedEnvelopes).sort((a, b) => a - b).forEach(number => {
+        envelopes.filter(env => env.isSelected).forEach(envelope => {
             const li = document.createElement('li');
-            li.textContent = `Envelope ${number}: $${number}`;
+            li.textContent = `Envelope ${envelope.id}: $${envelope.id}`;
             selectedEnvelopesList.appendChild(li);
         });
     }
+
+    renderSelectedEnvelopes();
 });
